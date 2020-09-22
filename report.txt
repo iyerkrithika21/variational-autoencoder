@@ -1,0 +1,66 @@
+TensorFlow 2.0 Upgrade Script
+-----------------------------
+Converted 4 files
+Detected 1 issues that require attention
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+File: vae/run.py
+--------------------------------------------------------------------------------
+vae/run.py:11:12: ERROR: Using member tf.flags in deprecated module tf.flags. tf.flags and tf.app.flags have been removed, please use the argparse or absl modules if you need command line parsing.
+================================================================================
+Detailed log follows:
+
+================================================================================
+================================================================================
+Input tree: 'vae'
+================================================================================
+--------------------------------------------------------------------------------
+Processing file 'vae/plot.py'
+ outputting to 'vae_tf_2/plot.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'vae/networks.py'
+ outputting to 'vae_tf_2/networks.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'vae/run.py'
+ outputting to 'vae_tf_2/run.py'
+--------------------------------------------------------------------------------
+
+11:12: ERROR: Using member tf.flags in deprecated module tf.flags. tf.flags and tf.app.flags have been removed, please use the argparse or absl modules if you need command line parsing.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'vae/vae.py'
+ outputting to 'vae_tf_2/vae.py'
+--------------------------------------------------------------------------------
+
+35:13: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+37:21: INFO: Renamed 'tf.placeholder' to 'tf.compat.v1.placeholder'
+40:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+47:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+55:26: INFO: Renamed 'tf.random_normal' to 'tf.random.normal'
+59:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+66:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+68:21: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+73:21: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+78:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+79:28: INFO: Renamed 'tf.train.AdamOptimizer' to 'tf.compat.v1.train.AdamOptimizer'
+80:17: INFO: Renamed 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+84:25: INFO: Renamed 'tf.Session' to 'tf.compat.v1.Session'
+85:19: INFO: Renamed 'tf.global_variables_initializer' to 'tf.compat.v1.global_variables_initializer'
+102:19: INFO: Added keywords to args of function 'tf.reduce_sum'
+102:60: INFO: Renamed 'tf.log' to 'tf.math.log'
+115:20: INFO: Added keywords to args of function 'tf.reduce_sum'
+115:44: INFO: Renamed 'tf.log' to 'tf.math.log'
+116:53: INFO: Renamed 'tf.log' to 'tf.math.log'
+--------------------------------------------------------------------------------
+
