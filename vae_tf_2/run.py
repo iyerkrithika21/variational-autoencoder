@@ -5,10 +5,11 @@ from plot import make_canvas, make_spread, make_canvas_gif, make_spread_gif
 import tensorflow_datasets as tfds
 from tqdm import tqdm
 from vae import VAE
-
+from datasets import MNISTDataset
+from training import *
 
 def main():
-    flags = tf.flags
+    flags = tf.compat.v1.flags
 
     # VAE params
     flags.DEFINE_integer("latent_dim", 2, "Dimension of latent space.")
@@ -45,13 +46,21 @@ def main():
     kwargs = {
         'latent_dim': FLAGS.latent_dim,
         'batch_size': FLAGS.batch_size,
-        'encoder': architectures['encoders'][FLAGS.encoder_architecture],
-        'decoder': architectures['decoders'][FLAGS.decoder_architecture]
+        'encoder_fn': architectures['encoders'][FLAGS.encoder_architecture],
+        'decoder_fn': architectures['decoders'][FLAGS.decoder_architecture]
     }
     vae = VAE(**kwargs)
 
     # data provider
-    provider = tfds.load('mnist', split='train', shuffle_files=True)
+    mnist = tf.keras.datasets.mnist
+    (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+
+
+
+    data = MNISTDataset(train_images.reshape([-1, 784]), train_labels, 
+                    test_images.reshape([-1, 784]), test_labels,
+                    batch_size=FLAGS.batch_size)
+    optimizer =  tf.keras.optimizers.Adam(1e-4)
 
     # do training
     tbar = tqdm(range(FLAGS.epochs))
@@ -60,8 +69,8 @@ def main():
 
         # iterate through batches
         for _ in range(FLAGS.updates_per_epoch):
-            x, _ = provider.train.next_batch(FLAGS.batch_size)
-            loss = vae.update(x)
+            train_x, _ = data.next_batch()
+            loss = train(vae,train_x,optimizer,FLAGS.batch_size)
             training_loss += loss
 
         # average loss over most recent epoch
@@ -70,15 +79,15 @@ def main():
         s = "Loss: {:.4f}".format(training_loss)
         tbar.set_description(s)
 
-        # make pretty pictures if latent dim. is 2-dimensional
-        if FLAGS.latent_dim == 2 and FLAGS.do_viz:
-            make_canvas(vae=vae, batch_size=FLAGS.batch_size, epoch=epoch)
-            make_spread(vae, provider, epoch)
+    #     # make pretty pictures if latent dim. is 2-dimensional
+    #     if FLAGS.latent_dim == 2 and FLAGS.do_viz:
+    #         make_canvas(vae=vae, batch_size=FLAGS.batch_size, epoch=epoch)
+    #         make_spread(vae, provider, epoch)
 
-    # make
-    if FLAGS.latent_dim == 2 and FLAGS.do_viz:
-        make_canvas_gif()
-        make_spread_gif()
+    # # make
+    # if FLAGS.latent_dim == 2 and FLAGS.do_viz:
+    #     make_canvas_gif()
+    #     make_spread_gif()
 
 
 if __name__ == '__main__':

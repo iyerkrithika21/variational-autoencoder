@@ -24,7 +24,7 @@ def make_canvas(vae, batch_size, epoch, n=15, bound=2):
     canvas = np.empty((28 * n, 28 * n))
     for i, z1 in enumerate(spaced_z1):
         for j, z2 in enumerate(spaced_z2):
-            img = vae.z2x(np.array([[z1, z2]] * batch_size))
+            img = vae.decode(np.array([[z1, z2]] * batch_size))
             canvas[(n - i - 1) * 28:(n - i) * 28, j * 28:(j + 1) * 28] = img
 
     # make figure and save

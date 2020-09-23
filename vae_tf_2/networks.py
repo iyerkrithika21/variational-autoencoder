@@ -3,7 +3,7 @@ import tensorflow as tf
 #from tf.keras import layers
 
 
-def fc_mnist_encoder(x, latent_dim):
+def fc_mnist_encoder(latent_dim):
     """
     Inference network q(z|x) which encodes a mini batch of data points
     to a parameterization of a diagonal Gaussian using a network with 
@@ -15,7 +15,7 @@ def fc_mnist_encoder(x, latent_dim):
     """
     encoder = tf.keras.Sequential(
     	[
-    	tf.keras.InputLayer(input_shape=(None,28*28)),
+    	tf.keras.layers.InputLayer(input_shape=(None,28*28)),
     	tf.keras.layers.Dense(500),
     	tf.keras.layers.Dense(500),
     	tf.keras.layers.Dense(200),
@@ -25,7 +25,7 @@ def fc_mnist_encoder(x, latent_dim):
     return encoder
 
 
-def fc_mnist_decoder(z,latent_dim):
+def fc_mnist_decoder(latent_dim):
     """
     Generative network p(x|z) which decodes a sample z from
     the latent space using a network with fully connected layers.
@@ -35,7 +35,7 @@ def fc_mnist_decoder(z,latent_dim):
     """
     decoder = tf.keras.Sequential(
     	[
-    	tf.keras.InputLayer(input_shape=(None,latent_dim)),
+    	tf.keras.layers.InputLayer(input_shape=(None,latent_dim)),
     	tf.keras.layers.Dense(200),
     	tf.keras.layers.Dense(500),
     	tf.keras.layers.Dense(500),
@@ -45,7 +45,7 @@ def fc_mnist_decoder(z,latent_dim):
     return decoder
 
 
-def conv_mnist_encoder(x, latent_dim):
+def conv_mnist_encoder(latent_dim):
     """
     Inference network q(z|x) which encodes a mini batch of data points
     to a parameterization of a diagonal Gaussian using a network with 
@@ -58,7 +58,7 @@ def conv_mnist_encoder(x, latent_dim):
 
     encoder = tf.keras.Sequential(
     	[
-    	tf.keras.InputLayer(input_shape=(None,28,28,1)),
+    	tf.keras.layers.InputLayer(input_shape=(None,28,28,1)),
     	tf.keras.layers.Conv2D(filters=32, kernel_size=5, strides=(2, 2)),
     	tf.keras.layers.Conv2D(filters=64, kernel_size=5, strides=(2, 2)),
     	tf.keras.layers.Conv2D(filters=128, kernel_size=2, strides=(2, 2)),
@@ -70,7 +70,7 @@ def conv_mnist_encoder(x, latent_dim):
     return encoder
 
 
-def conv_mnist_decoder(z):
+def conv_mnist_decoder(latent_dim):
     """
     Generative network p(x|z) which decodes a sample z from
     the latent space using a network with convolutional layers.
