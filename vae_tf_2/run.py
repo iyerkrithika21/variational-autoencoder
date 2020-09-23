@@ -7,6 +7,8 @@ from tqdm import tqdm
 from vae import VAE
 from datasets import MNISTDataset
 from training import *
+import datetime
+
 
 def main():
     flags = tf.compat.v1.flags
@@ -62,6 +64,17 @@ def main():
                     batch_size=FLAGS.batch_size)
     optimizer =  tf.keras.optimizers.Adam(1e-4)
 
+
+    # Tensorboard log locations
+    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+    train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+    
+
+
+
+
+
     # do training
     tbar = tqdm(range(FLAGS.epochs))
     for epoch in tbar:
@@ -78,6 +91,15 @@ def main():
         # update progress bar
         s = "Loss: {:.4f}".format(training_loss)
         tbar.set_description(s)
+
+
+        with train_summary_writer.as_default():
+            tf.summary.scalar('loss', training_loss, step=epoch)
+            tf.summary.scalar('accuracy', training_loss, step=epoch)
+
+
+
+
 
     #     # make pretty pictures if latent dim. is 2-dimensional
     #     if FLAGS.latent_dim == 2 and FLAGS.do_viz:
