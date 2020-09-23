@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 from moviepy.editor import ImageSequenceClip
-from scipy.ndimage import imread
+from matplotlib.pyplot import imread
 
 
 def make_canvas(vae, batch_size, epoch, n=15, bound=2):

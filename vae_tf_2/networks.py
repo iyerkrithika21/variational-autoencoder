@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tensorflow.contrib import layers
+#from tf.keras import layers
 
 
 def fc_mnist_encoder(x, latent_dim):
@@ -13,16 +13,19 @@ def fc_mnist_encoder(x, latent_dim):
     :param latent_dim: dimension of latent space into which we encode
     :return: e: Encoded mini batch.
     """
-    e = layers.fully_connected(x, 500, scope='fc-01')
-    e = layers.fully_connected(e, 500, scope='fc-02')
-    e = layers.fully_connected(e, 200, scope='fc-03')
-    e = layers.fully_connected(e, 2 * latent_dim, activation_fn=None,
-                               scope='fc-final')
+    encoder = tf.keras.Sequential(
+    	[
+    	tf.keras.InputLayer(input_shape=(None,28*28)),
+    	tf.keras.layers.Dense(500),
+    	tf.keras.layers.Dense(500),
+    	tf.keras.layers.Dense(200),
+    	tf.keras.layers.Dense(2 * latent_dim),
+    	])
 
-    return e
+    return encoder
 
 
-def fc_mnist_decoder(z):
+def fc_mnist_decoder(z,latent_dim):
     """
     Generative network p(x|z) which decodes a sample z from
     the latent space using a network with fully connected layers.
@@ -30,13 +33,16 @@ def fc_mnist_decoder(z):
     :param z: Latent variable sampled from latent space.
     :return: x: Decoded latent variable.
     """
-    x = layers.fully_connected(z, 200, scope='fc-01')
-    x = layers.fully_connected(x, 500, scope='fc-02')
-    x = layers.fully_connected(x, 500, scope='fc-03')
-    x = layers.fully_connected(x, 28 * 28, activation_fn=tf.nn.sigmoid,
-                               scope='fc-final')
+    decoder = tf.keras.Sequential(
+    	[
+    	tf.keras.InputLayer(input_shape=(None,latent_dim)),
+    	tf.keras.layers.Dense(200),
+    	tf.keras.layers.Dense(500),
+    	tf.keras.layers.Dense(500),
+    	tf.keras.layers.Dense(units = 28*28,activation = tf.nn.sigmoid),
+    	])
 
-    return x
+    return decoder
 
 
 def conv_mnist_encoder(x, latent_dim):
@@ -49,17 +55,19 @@ def conv_mnist_encoder(x, latent_dim):
     :param latent_dim: dimension of latent space into which we encode
     :return: e: Encoded mini batch.
     """
-    e = tf.reshape(x, [-1, 28, 28, 1])
-    e = layers.conv2d(e, 32, 5, stride=2, scope='conv-01')
-    e = layers.conv2d(e, 64, 5, stride=2, scope='conv-02')
-    e = layers.conv2d(e, 128, 3, stride=2, scope='conv-03')
-    e = layers.flatten(e)
-    e = layers.fully_connected(e, 500, scope='fc-01')
-    e = layers.fully_connected(e, 200, scope='fc-02')
-    e = layers.fully_connected(e, 2 * latent_dim, activation_fn=None,
-                               scope='fc-final')
 
-    return e
+    encoder = tf.keras.Sequential(
+    	[
+    	tf.keras.InputLayer(input_shape=(None,28,28,1)),
+    	tf.keras.layers.Conv2D(filters=32, kernel_size=5, strides=(2, 2)),
+    	tf.keras.layers.Conv2D(filters=64, kernel_size=5, strides=(2, 2)),
+    	tf.keras.layers.Conv2D(filters=128, kernel_size=2, strides=(2, 2)),
+    	tf.keras.layers.Flatten(),
+    	f.keras.layers.Dense(500),
+    	tf.keras.layers.Dense(200),
+    	tf.keras.layers.Dense(2 * latent_dim),])
+
+    return encoder
 
 
 def conv_mnist_decoder(z):
@@ -70,13 +78,14 @@ def conv_mnist_decoder(z):
     :param z: Latent variable sampled from latent space.
     :return: x: Decoded latent variable.
     """
-    x = tf.expand_dims(z, 1)
-    x = tf.expand_dims(x, 1)
-    x = layers.conv2d_transpose(x, 128, 3, padding='VALID', scope='conv-transpose-01')
-    x = layers.conv2d_transpose(x, 64, 5, padding='VALID', scope='conv-transpose-02')
-    x = layers.conv2d_transpose(x, 32, 5, stride=2, scope='conv-transpose-03')
-    x = layers.conv2d_transpose(x, 1, 5, stride=2, activation_fn=tf.nn.sigmoid,
-                                scope='conv-transpose-final')
-    x = layers.flatten(x)
+    self.decoder = tf.keras.Sequential(
+        [
+        tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
+        tf.keras.layers.Conv2DTranspose(filters=128, kernel_size=3, strides=2, padding='valid'),
+    	tf.keras.layers.Conv2DTranspose(filters=64, kernel_size=5, strides=2, padding='valid'),
+    	tf.keras.layers.Conv2DTranspose(filters=32, kernel_size=5, strides=2),
+    	tf.keras.layers.Conv2DTranspose(filters=1, kernel_size=5, strides=2,activation=tf.nn.sigmoid),
+    	tf.keras.layers.Flatten(),
+    	])
 
-    return x
+    return decoder

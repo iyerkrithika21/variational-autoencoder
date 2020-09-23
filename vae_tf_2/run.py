@@ -2,7 +2,7 @@ import networks as nets
 import tensorflow as tf
 
 from plot import make_canvas, make_spread, make_canvas_gif, make_spread_gif
-from tensorflow.examples.tutorials.mnist import input_data
+import tensorflow_datasets as tfds
 from tqdm import tqdm
 from vae import VAE
 
@@ -51,7 +51,7 @@ def main():
     vae = VAE(**kwargs)
 
     # data provider
-    provider = input_data.read_data_sets(train_dir=FLAGS.data_dir)
+    provider = tfds.load('mnist', split='train', shuffle_files=True)
 
     # do training
     tbar = tqdm(range(FLAGS.epochs))
