@@ -45,15 +45,15 @@ class VAE(tf.keras.Model):
         mean = encoded[:, :self._latent_dim]
         logvar = encoded[:, self._latent_dim:]
         # also calculate standard deviation for practical use
-        stddev = tf.sqrt(tf.exp(logvar))
-
+        #stddev = tf.sqrt(tf.exp(logvar))
+        stddev = logvar
         return mean, logvar,stddev
 
-    def reparameterize(self,mean,stddev):
+    def reparameterize(self,mean,logvar):
 
         # sample from latent space
         epsilon = tf.random.normal(shape=mean.shape)
-        z = mean + stddev * epsilon
+        z = mean + tf.exp(logvar * .5) * epsilon
 
         return z
 
