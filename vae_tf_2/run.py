@@ -14,7 +14,7 @@ def main():
     flags = tf.compat.v1.flags
 
     # VAE params
-    flags.DEFINE_integer("latent_dim", 2, "Dimension of latent space.")
+    flags.DEFINE_integer("latent_dim", 4, "Dimension of latent space.")
     flags.DEFINE_integer("batch_size", 32, "Batch size.")
     # architectures
     flags.DEFINE_string("encoder_architecture", 'fc', "Architecture to use for encoder.")
@@ -36,13 +36,19 @@ def main():
     architectures = {
         'encoders': 
         {
-            'mnist':{
+            'mnist':
+            {
                 'fc': nets.fc_mnist_encoder,
                 'conv': nets.conv_mnist_encoder
-                    },
-            "moon":{
+            },
+            "moon":
+            {
                 "fc":nets.fc_moon_encoder
-                   }
+            },
+            "circles":
+            {
+                'fc':nets.fc_moon_encoder
+            }
         },
         'decoders': 
         {
@@ -52,6 +58,10 @@ def main():
                 'conv': nets.conv_mnist_decoder
             },
             "moon":
+            {
+                'fc':nets.fc_moon_decoder
+            },
+            "circles":
             {
                 'fc':nets.fc_moon_decoder
             }
@@ -66,14 +76,16 @@ def main():
         'encoder_fn': architectures['encoders'][dataset_choice][FLAGS.encoder_architecture],
         'decoder_fn': architectures['decoders'][dataset_choice][FLAGS.decoder_architecture]
     }
+
+
     vae = VAE(**kwargs)
 
-    train_dataset,test_dataset,optimizer,test_sample,num_examples_to_generate,scalar = load_data_and_optimiser(dataset_choice,100000,0.01,FLAGS.batch_size)
+    train_dataset,test_dataset,optimizer,test_sample,num_examples_to_generate,scalar = load_data_and_optimiser(dataset_choice,200000,0.09,FLAGS.batch_size)
 
 
     # Tensorboard log locations
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+    train_log_dir = 'logs/gradient_tape/' + dataset_choice + '/train'
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
     
 
@@ -86,7 +98,7 @@ def main():
     tbar = tqdm(range(FLAGS.epochs))
     for epoch in tbar:
         training_loss = 0.
-
+        
         # iterate through batches
         for train_x in train_dataset:
 
@@ -108,12 +120,14 @@ def main():
         
         print('Epoch: {}, Test set ELBO: {}'
         .format(epoch, elbo))
-        generate_and_save_moon(vae, epoch, test_sample,scalar)
+        generate_and_save_moon(vae, epoch, test_sample,scalar,dataset_choice)
+        # generate_and_save_images(vae,epoch,test_sample)
 
 
 
         with train_summary_writer.as_default():
             tf.summary.scalar('loss', training_loss, step=epoch)
+            tf.summary.scalar('Test ELBO',elbo,step=epoch)
             
 
     

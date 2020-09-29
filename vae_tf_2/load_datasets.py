@@ -3,7 +3,7 @@ import tensorflow as tf
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-
+import matplotlib.pyplot as plt
 # class MyDataset:
 #     """'Bare minimum' class to wrap MNIST numpy arrays into a dataset."""
 #     def __init__(self, train_imgs, test_imgs, batch_size, 
@@ -55,9 +55,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 
-# def preprocess_images(images):
-#   images = images / 255.
-#   return np.where(images > .5, 1.0, 0.0).astype('float32')
+def preprocess_images(images):
+  images = images / 255.
+  return np.where(images > .5, 1.0, 0.0).astype('float32')
 
 
 
@@ -83,7 +83,7 @@ def load_data_and_optimiser(dataset_name,n_samples,noise_level,batch_size):
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :]
 
-        return train_dataset,test_dataset,test_sample,num_examples_to_generate,scaler
+        return train_dataset,test_dataset,optimizer,test_sample,num_examples_to_generate,scaler
 
 
     elif(dataset_name=="moon"):
@@ -93,21 +93,64 @@ def load_data_and_optimiser(dataset_name,n_samples,noise_level,batch_size):
         
         
         X = scaler.fit_transform(noisy_moons[0])
+        # X = noisy_moons[0]
         X_train, X_test,_,_ = train_test_split(X,noisy_moons[1], test_size=0.01, random_state=42)
         # print(X_train.max(),X_train.min())
         train_size = len(X_train)
         batch_size = batch_size
         test_size = len(X_test)
+
+        
+
         train_dataset = (tf.data.Dataset.from_tensor_slices(X_train.astype('float32')).shuffle(train_size).batch(batch_size))
         
         test_dataset = (tf.data.Dataset.from_tensor_slices(X_test.astype('float32')).shuffle(test_size).batch(batch_size))
 
-        optimizer =  tf.keras.optimizers.Adam(1e-5)
-        num_examples_to_generate = 300
+        optimizer =  tf.keras.optimizers.Adam(1e-4)
+        num_examples_to_generate = 1000
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :]
-
+        plt.subplot(1,2,1)
+        plt.plot(X_train[:,0],X_train[:,1],'o')
+        plt.subplot(1,2,2)
+        plt.plot(test_sample[:,0],test_sample[:,1],'o')
+        plt.show()
         return train_dataset,test_dataset,optimizer,test_sample,num_examples_to_generate,scaler
+
+    elif(dataset_name=="circles"):
+
+        noisy_cirles = datasets.make_circles(n_samples = n_samples*2,noise = noise_level,random_state=42)
+
+        X = noisy_cirles[0]
+        # X = X*100
+        X = scaler.fit_transform(X) 
+
+        X = X[noisy_cirles[1]==0,:]
+        y = np.zeros(len(X))
+        X_train, X_test,_,_ = train_test_split(X,y, test_size=0.01, random_state=42)
+        # print(X_train.max(),X_train.min())
+        train_size = len(X_train)
+        batch_size = batch_size
+        test_size = len(X_test)
+
+
+
+        train_dataset = (tf.data.Dataset.from_tensor_slices(X_train.astype('float32')).shuffle(train_size).batch(batch_size))
+        
+        test_dataset = (tf.data.Dataset.from_tensor_slices(X_test.astype('float32')).shuffle(test_size).batch(batch_size))
+
+        optimizer =  tf.keras.optimizers.Adam(1e-4)
+        num_examples_to_generate = 1000
+        for test_batch in test_dataset.take(1):
+            test_sample = test_batch[0:num_examples_to_generate, :]
+            
+        plt.subplot(1,2,1)
+        plt.plot(X_train[:,0],X_train[:,1],'o')
+        plt.subplot(1,2,2)
+        plt.plot(test_sample[:,0],test_sample[:,1],'o')
+        plt.show()
+        return train_dataset,test_dataset,optimizer,test_sample,num_examples_to_generate,scaler
+
 
 
 

@@ -106,9 +106,9 @@ def fc_moon_encoder(latent_dim):
     encoder = tf.keras.Sequential(
         [
         tf.keras.layers.InputLayer(input_shape=(2,)),
-        tf.keras.layers.Dense(100,activation = tf.nn.elu),
-        tf.keras.layers.Dense(100,activation = tf.nn.elu),
-        tf.keras.layers.Dense(50),
+        tf.keras.layers.Dense(8),#,activation=tf.nn.elu),
+        #tf.keras.layers.Dense(100,activation = tf.nn.relu),
+        tf.keras.layers.Dense(2),#,activation=tf.nn.elu),
         tf.keras.layers.Dense(2 * latent_dim),
         ])
 
@@ -126,10 +126,10 @@ def fc_moon_decoder(latent_dim):
     decoder = tf.keras.Sequential(
         [
         tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-        tf.keras.layers.Dense(50),
-        tf.keras.layers.Dense(100,activation = tf.nn.elu),
-        tf.keras.layers.Dense(100,activation=tf.nn.elu),
-        tf.keras.layers.Dense(units = 2,activation = tf.nn.sigmoid),
+        tf.keras.layers.Dense(2),#,activation=tf.nn.tanh),
+        tf.keras.layers.Dense(8),#,activation=tf.nn.elu),
+        #tf.keras.layers.Dense(100,activation=tf.nn.relu),
+        tf.keras.layers.Dense(units = 2)#,activation=tf.nn.sigmoid),
 
         ])
 

@@ -12,7 +12,7 @@ def train(model,x,optimizer,batch_size,dataset_name):
     update the model's parameters.
     """
     with tf.GradientTape() as tape:
-        loss = compute_loss(model, x,batch_size,dataset_name)
+        loss = compute_loss(model, x,batch_size,dataset_name) 
     gradients = tape.gradient(loss, model.trainable_variables)
     #print(gradients)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -20,37 +20,10 @@ def train(model,x,optimizer,batch_size,dataset_name):
     return loss
 
 
-# def compute_loss(model,x,batch_size):
 
-#     mean,log_var,stddev = model.encode(x)
-#     z = model.reparameterize(mean,log_var)
-#     decoded = model.decode(z)
-
-
-#     # calculate KL divergence between approximate posterior q and prior p
-#     kl = kl_diagnormal_stdnormal(mean, log_var)
-#     #kl = tf.cast(kl,dtype=tf.float64)
-#     # calculate reconstruction error between decoded sample
-#     # and original input batch
-#     #log_like = bernoulli_log_likelihood(tf.cast(x,dtype=tf.float64), tf.cast(decoded,dtype=tf.float64))
-#     log_like = bernoulli_log_likelihood(x,decoded[:,:,:,0])
-#     loss = (kl + log_like)#/batch_size
-#     # loss = kl
-#     # print("z")
-#     # tf.print(z)
-#     # print("decoded")
-#     # tf.print(decoded,x)
-#     return loss
-
-def log_normal_pdf(sample, mean, logvar, raxis=1):
-  log2pi = tf.math.log(2. * np.pi)
-  return tf.reduce_sum(
-      -.5 * ((sample - mean) ** 2. * tf.exp(-logvar) + logvar + log2pi),
-      axis=raxis)
 
 
 def compute_loss(model, x,batch_size,dataset_name):
-
 
     mean, logvar,_ = model.encode(x)
     z = model.reparameterize(mean, logvar)
@@ -59,18 +32,22 @@ def compute_loss(model, x,batch_size,dataset_name):
     if(dataset_name=="mnist"):
         
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit[:,:,:,0], labels=x)
-        logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2])
+        logpx_z = tf.reduce_sum(cross_ent, axis=[1, 2])
         
         
-    elif(dataset_name=="moon"):
-        cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
-        logpx_z = -tf.reduce_sum(cross_ent, axis=[1])
+    elif(dataset_name=="moon" or dataset_name =="circles"):
+        cross_ent = tf.keras.losses.MSE(x_logit, x)
+        # logpx_z = -tf.reduce_sum(cross_ent, axis=[1])
+        logpx_z = cross_ent
         
 
 
-    logpz = log_normal_pdf(z, 0., 0.)
-    logqz_x = log_normal_pdf(z, mean, logvar)
-    return -tf.reduce_mean(logpx_z + logpz - logqz_x)
+    # logpz = log_normal_pdf(z, 0., 0.)
+    # logqz_x = log_normal_pdf(z, mean, logvar)
+    kl_loss = kl_diagnormal_stdnormal(mean,logvar)
+    # return tf.reduce_mean(logpx_z + logpz - logqz_x)
+    return tf.reduce_mean(kl_loss) + tf.reduce_mean(logpx_z)
+
 
 
 def kl_diagnormal_stdnormal(mu, log_var, eps=1e-8):
@@ -86,28 +63,15 @@ def kl_diagnormal_stdnormal(mu, log_var, eps=1e-8):
     :return: kl: KL Divergence between q(z|x) and p(z).
     """
    
-    kl = tf.reduce_mean(-0.5 * tf.reduce_sum(1 + log_var - mu ** 2 - tf.math.exp(log_var), axis = 1), axis = 0)
-    # print("KL LOSS")
-    # print(mu,log_var,kl)
+    kl = 1 + log_var - mu**2 - tf.exp(log_var)
+    kl = tf.reduce_sum(kl,axis=-1)
+    kl = kl*(-0.5)
+    kl = tf.reduce_mean(kl)
+
     return kl
 
 
-def bernoulli_log_likelihood(targets, outputs, eps=1e-8):
-    """
-    Calculates negative log likelihood -log(p(x|z)) of outputs,
-    assuming a Bernoulli distribution.
 
-    :param targets: MNIST images.
-    :param outputs: Probability distribution over outputs.
-    :return: log_like: -log(p(x|z)) (negative log likelihood)
-    """
-    #print(tf.shape(outputs),tf.shape(targets))
-    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=outputs+ eps, labels=targets)
-
-    log_like = tf.reduce_mean(cross_ent)
-    #print(cross_ent.shape,log_like.shape)
-
-    return log_like
 
 def generate_and_save_images(model, epoch, test_sample):
     mean, logvar,_ = model.encode(test_sample)
@@ -123,18 +87,23 @@ def generate_and_save_images(model, epoch, test_sample):
         plt.axis('off')
 
     # tight_layout minimizes the overlap between 2 sub-plots
-    plt.savefig('image_at_epoch_{:04d}.png'.format(epoch))
+    plt.savefig('mnist/image_at_epoch_{:04d}.png'.format(epoch))
     plt.show()
 
 
-def generate_and_save_moon(model,epoch,test_sample,scaler):
+def generate_and_save_moon(model,epoch,test_sample,scaler,dataset_name):
     mean, logvar,_ = model.encode(test_sample)
     z = model.reparameterize(mean, logvar)
     predictions = model.sample(z)
-    predictions = scaler.inverse_transform(predictions)
+    #predictions = scaler.inverse_transform(predictions)
     fig = plt.figure(figsize=(4, 4))
     plt.plot(predictions[:,0],predictions[:,1],'o')
-    plt.savefig('moon_at_epoch_{:04d}.png'.format(epoch))
+    plt.savefig(dataset_name+'/at_epoch_{:04d}.png'.format(epoch))
     plt.close()
         
 
+def log_normal_pdf(sample, mean, logvar, raxis=1):
+  log2pi = tf.math.log(2. * np.pi)
+  return tf.reduce_sum(
+      -.5 * ((sample - mean) ** 2. * tf.exp(-logvar) + logvar + log2pi),
+      axis=raxis)
