@@ -35,10 +35,10 @@ def compute_loss(model, x,batch_size,dataset_name):
         logpx_z = tf.reduce_sum(cross_ent, axis=[1, 2])
         
         
-    elif(dataset_name=="moon" or dataset_name =="circles"):
-        cross_ent = tf.keras.losses.MSE(x_logit, x)
+    elif(dataset_name=="moon" or dataset_name =="circles" or dataset_name=="spiral"):
+        mse = tf.keras.losses.MSE(x_logit, x)
         # logpx_z = -tf.reduce_sum(cross_ent, axis=[1])
-        logpx_z = cross_ent
+        logpx_z = mse*100
         
 
 
@@ -95,7 +95,7 @@ def generate_and_save_moon(model,epoch,test_sample,scaler,dataset_name):
     mean, logvar,_ = model.encode(test_sample)
     z = model.reparameterize(mean, logvar)
     predictions = model.sample(z)
-    #predictions = scaler.inverse_transform(predictions)
+    # predictions = scaler.inverse_transform(predictions)
     fig = plt.figure(figsize=(4, 4))
     plt.plot(predictions[:,0],predictions[:,1],'o')
     plt.savefig(dataset_name+'/at_epoch_{:04d}.png'.format(epoch))

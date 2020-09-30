@@ -1,8 +1,8 @@
 import networks as nets
 import tensorflow as tf
 
-from plot import make_canvas, make_spread, make_canvas_gif, make_spread_gif
-import tensorflow_datasets as tfds
+from plot_utilities import *
+# import tensorflow_datasets as tfds
 from tqdm import tqdm
 from vae import VAE
 from load_datasets import *
@@ -14,7 +14,7 @@ def main():
     flags = tf.compat.v1.flags
 
     # VAE params
-    flags.DEFINE_integer("latent_dim", 4, "Dimension of latent space.")
+    flags.DEFINE_integer("latent_dim", 2, "Dimension of latent space.")
     flags.DEFINE_integer("batch_size", 32, "Batch size.")
     # architectures
     flags.DEFINE_string("encoder_architecture", 'fc', "Architecture to use for encoder.")
@@ -48,6 +48,10 @@ def main():
             "circles":
             {
                 'fc':nets.fc_moon_encoder
+            },
+            "spiral":
+            {
+                'fc':nets.fc_moon_encoder
             }
         },
         'decoders': 
@@ -64,12 +68,17 @@ def main():
             "circles":
             {
                 'fc':nets.fc_moon_decoder
+            },
+            "spiral":
+            {
+                'fc':nets.fc_moon_decoder
             }
+
         }
     }
 
     # define model
-    dataset_choice ="moon"
+    dataset_choice ="spiral"
     kwargs = {
         'latent_dim': FLAGS.latent_dim,
         'batch_size': FLAGS.batch_size,
@@ -79,13 +88,16 @@ def main():
 
 
     vae = VAE(**kwargs)
-
-    train_dataset,test_dataset,optimizer,test_sample,num_examples_to_generate,scalar = load_data_and_optimiser(dataset_choice,200000,0.09,FLAGS.batch_size)
+    n_loops = 3
+    if(dataset_choice=="mnist"):
+        train_dataset,test_dataset,optimizer,test_sample = load_mnist_data()
+    else:
+        train_dataset,test_dataset,optimizer,train_sample,test_sample,scaler = load_toy_data(dataset_choice,2000,0.01,FLAGS.batch_size,n_loops*2,False)
 
 
     # Tensorboard log locations
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    train_log_dir = 'logs/gradient_tape/' + dataset_choice + '/train'
+    train_log_dir = 'logs/gradient_tape/' + dataset_choice +'_'+current_time+ '/train'
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
     
 
@@ -120,14 +132,15 @@ def main():
         
         print('Epoch: {}, Test set ELBO: {}'
         .format(epoch, elbo))
-        generate_and_save_moon(vae, epoch, test_sample,scalar,dataset_choice)
+        generate_and_save_moon(vae, epoch, test_sample,scaler,dataset_choice)
         # generate_and_save_images(vae,epoch,test_sample)
+    plot_latent_space_kde(vae,test_sample,train_sample)
+    
 
 
-
-        with train_summary_writer.as_default():
-            tf.summary.scalar('loss', training_loss, step=epoch)
-            tf.summary.scalar('Test ELBO',elbo,step=epoch)
+    #     with train_summary_writer.as_default():
+    #         tf.summary.scalar('loss', training_loss, step=epoch)
+    #         tf.summary.scalar('Test ELBO',elbo,step=epoch)
             
 
     
@@ -135,15 +148,11 @@ def main():
 
 
 
-    #     # make pretty pictures if latent dim. is 2-dimensional
-    #     if FLAGS.latent_dim == 2 and FLAGS.do_viz:
-    #         make_canvas(vae=vae, batch_size=FLAGS.batch_size, epoch=epoch)
-    #         make_spread(vae, provider, epoch)
+    # #     # make pretty pictures if latent dim. is 2-dimensional
+    # #     if FLAGS.latent_dim == 2 and FLAGS.do_viz:
+    # #         make_canvas(vae=vae, batch_size=FLAGS.batch_size, epoch=epoch)
+    # #         make_spread(vae, provider, epoch)
 
-    # # make
-    # if FLAGS.latent_dim == 2 and FLAGS.do_viz:
-    #     make_canvas_gif()
-    #     make_spread_gif()
 
 
 if __name__ == '__main__':
